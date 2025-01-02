@@ -1,35 +1,33 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-
+import { sendDynamicMessage } from "../shared/sendmessage.ts";
 const META_API_URL =
-  "https://crmapi.automatebusiness.com/whatsapp/waba/v1/messages"; 
+  "https://crmapi.automatebusiness.com/whatsapp/waba/v1/messages";
 const ACCESS_TOKEN = "647f25c64d53b05ab3b32b45";
 
+// async function sendWhatsAppMessage(to: string, message: string) {
+//   const headers = new Headers();
+//   headers.set("Authorization", `Bearer ${ACCESS_TOKEN}`);
+//   headers.set("Content-Type", "application/json");
 
-async function sendWhatsAppMessage(to: string, message: string) {
-  const headers = new Headers();
-  headers.set("Authorization", `Bearer ${ACCESS_TOKEN}`);
-  headers.set("Content-Type", "application/json");
+//   const body = JSON.stringify({
+//     messaging_product: "whatsapp",
+//     to: to,
+//     text: { body: message },
+//   });
 
-  const body = JSON.stringify({
-    messaging_product: "whatsapp",
-    to: to,
-    text: { body: message },
-  });
+//   const response = await fetch(META_API_URL, {
+//     method: "POST",
+//     headers,
+//     body,
+//   });
 
-  const response = await fetch(META_API_URL, {
-    method: "POST",
-    headers,
-    body,
-  });
+//   if (!response.ok) {
+//     const error = await response.text();
+//     throw new Error(`Failed to send message: ${error}`);
+//   }
 
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Failed to send message: ${error}`);
-  }
-
-  return await response.json();
-}
-
+//   return await response.json();
+// }
 
 Deno.serve(async (req) => {
   try {
@@ -38,18 +36,32 @@ Deno.serve(async (req) => {
 
     // Ensure that required fields are present
     if (!record || !record.phone || !record.fullName) {
-      throw new Error("Missing required 'phone' or 'fullName' fields in payload.");
+      throw new Error(
+        "Missing required 'phone' or 'fullName' fields in payload.",
+      );
     }
 
     // Destructure phone and fullName from record
     const { phone, fullName } = record;
     console.log(phone, fullName); // Log the phone number and full name
 
-    // Send the WhatsApp message
-    await sendWhatsAppMessage(
+    await sendDynamicMessage(
       phone,
-      `Hi ${fullName}, Thank you for signing up!`
+      "an_reminder",
+      "DlfBfrqnDts3DdKiZREFTSAQHkAsG3eyFHWRf5XSpa7btodHhiUimxVU5ERVJTQ09SRQ0FyZjPhWl00oaaO8IN3TsGRgcczsFuwQBUtlqpnhyO1Loi3zMzX8S3VmdpNIjr1QSf8ejPzmQ",
+      "361055747094950",
+      "409309775588885",
+      {},
+      [
+        fullName,
+        fullName,
+      ],
     );
+    // Send the WhatsApp message
+    // await sendWhatsAppMessage(
+    //   phone,
+    //   `Hi ${fullName}, Thank you for signing up!`
+    // );
 
     // Return success response
     return new Response(
@@ -57,7 +69,7 @@ Deno.serve(async (req) => {
       {
         status: 200,
         headers: { "Content-Type": "application/json" },
-      }
+      },
     );
   } catch (error) {
     console.error("Error processing request:", error);
@@ -65,7 +77,7 @@ Deno.serve(async (req) => {
     // Return error response
     return new Response(
       JSON.stringify({ error: error.message }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
+      { status: 500, headers: { "Content-Type": "application/json" } },
     );
   }
 });
